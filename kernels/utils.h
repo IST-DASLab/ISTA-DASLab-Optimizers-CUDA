@@ -18,6 +18,7 @@
 #include <limits> // for epsilon
 
 using namespace std;
+using TT = torch::Tensor;
 
 typedef __nv_bfloat16 bfloat16;
 typedef __nv_bfloat162 bfloat162;
