@@ -1,6 +1,6 @@
 #include <torch/extension.h>
 #include <c10/cuda/CUDAGuard.h>
-#include "utils.h"
+#include "../utils.h"
 //#include "parallel_reduce.h"
 
 __global__ void compute_row_initial_kernel (float *global_V, float *global_g, float *global_q, float *global_out, int row_start, int row_end, int m, float damp, int N, int B, int nbits, int use_kahan, int grad_const, int do_init, int do_debug);

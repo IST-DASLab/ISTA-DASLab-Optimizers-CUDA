@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "../utils.h"
 // #include "parallel_reduce.h"
 
 __device__ inline void generic_parallel_reduce(float *mem, int N, const long THREADS, const long Tid) {
