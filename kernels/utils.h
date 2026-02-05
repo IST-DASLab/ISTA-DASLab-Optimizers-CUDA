@@ -73,6 +73,7 @@ __device__ inline long log_threads(long T) {
 	if(T == 256) return 8;
 	if(T == 512) return 9;
 	if(T == 1024) return 10;
+	return 1; // default to avoid compilation errors
 }
 
 inline LL get_threads(LL max_threads) {
