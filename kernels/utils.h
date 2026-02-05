@@ -87,6 +87,19 @@ inline LL get_threads(LL max_threads) {
     return threads;
 }
 
+__device__ inline void dynamically_assign_float(void *out, int out_index, float value, int out_bits) {
+    /*
+        This function assigns out[out_index] = value.
+        If nbits=16, then it means out is bfloat16 and we need to convert value to bfloat16.
+        If nbits=32, then it means out is float and no conversion is needed
+    */
+    if(out_bits == 16) {
+        ((bfloat16*) out)[out_index] = __float2bfloat16(value);
+    } else {
+        ((float*) out)[out_index] = value;
+    }
+}
+
 __device__ inline void dynamically_assign(void *out, void *inp, int out_index, int inp_index, int out_bits, int inp_bits) {
     /*
         This function assigns out[out_index] = inp[inp_index] based on the types and performs the conversions when needed:
@@ -109,6 +122,34 @@ __device__ inline void dynamically_assign(void *out, void *inp, int out_index, i
     }
 }
 
+__device__ inline bool should_skip(float x, int ct) { // ct stands for constant
+    if(ct == 0) {
+        return false;
+    }
+    int x_int = static_cast<int>(x);
+    if(((ct - 10) <= x_int) && (x_int <= (ct + 10))) {
+        return true;
+    }
+    return false;
+}
+
+template<typename T>
+__device__ inline void copy_global_to_shmem(T *global,
+                                            T *shmem,
+                                            long global_start,
+                                            long global_end,
+                                            const long THREADS,
+                                            const long Tid) {
+    long j_global, j_shmem; // used in for-loops to read from global memory to shared memory
+
+    for(j_global = global_start + Tid, j_shmem = Tid;
+        j_global < global_end;
+        j_global += THREADS, j_shmem += THREADS)
+    {
+        shmem[j_shmem] = global[j_global];
+    }
+}
+
 #define CHECK_CUDA(x) TORCH_CHECK(x.device().is_cuda(), #x " must be a CUDA tensor")
 #define CHECK_CONTIGUOUS(x) TORCH_CHECK(x.is_contiguous(), #x " must be contiguous")
 #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
@@ -117,7 +158,10 @@ __device__ inline void dynamically_assign(void *out, void *inp, int out_index, i
 #define FLOAT_EPS std::numeric_limits<float>::epsilon()
 #define DOUBLE_EPS std::numeric_limits<double>::epsilon()
 #define GPU_ERROR_CHECK(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+#define IS_BF16(x) torch::ScalarType::BFloat16 == x.scalar_type()
+#define IS_FLOAT(x) torch::ScalarType::Float == x.scalar_type()
 #define ASSERT_BF16(x) { assert(torch::ScalarType::BFloat16 == x.scalar_type()); }
+#define ASSERT_FLOAT(x) { assert(IS_FLOAT(x)); }
 #define ASSERT_FLOAT_16_OR_32(x) { assert(torch::ScalarType::BFloat16 == x.scalar_type() || torch::ScalarType::Float == x.scalar_type()); }
 
 #define COPY_DIRECTION_k2d 0

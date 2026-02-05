@@ -51,6 +51,15 @@ setup(
                 './kernels/micro_adam/micro_adam_asymm_block_quant_inv.cu',
             ],
         ),
+        get_cuda_extension(
+            name=f'ista_daslab_cuda_sparse_mfac_pruner',
+            sources=[
+                './kernels/sparse_mfac_pruner/mfac_pruner_cpp.cpp',
+                './kernels/sparse_mfac_pruner/mfac_pruner_dense.cu',
+                './kernels/sparse_mfac_pruner/mfac_pruner_initial.cu',
+                './kernels/sparse_mfac_pruner/mfac_pruner_sparse.cu',
+            ],
+        ),
     ],
     cmdclass={'build_ext': BuildExtension.with_options(verbose=True)},
 )
